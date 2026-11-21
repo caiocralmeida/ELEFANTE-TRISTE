@@ -165,6 +165,7 @@ function updateAreaPreview(area){
   const zoom=Number($(area.zoom).value||100);
   img.style.transform=zoom>100?`scale(${zoom/100})`:'none';
   img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
+  img.style.transformOrigin='center center';
   $(area.x+'_value').textContent=$(area.x).value+'%';
   $(area.y+'_value').textContent=$(area.y).value+'%';
   $(area.zoom+'_value').textContent=zoom+'%';
