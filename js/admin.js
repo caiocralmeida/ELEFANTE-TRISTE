@@ -15,9 +15,9 @@ let mediaFilter = 'all';
 let slugEdited = false;
 
 const imageAreas = [
-  {key:'home',url:'home_image_url',fit:'home_fit',x:'home_x',y:'home_y',preview:'home_preview',frame:'home_frame'},
-  {key:'catalog',url:'catalog_image_url',fit:'catalog_fit',x:'catalog_x',y:'catalog_y',preview:'catalog_preview',frame:'catalog_frame'},
-  {key:'detail',url:'detail_image_url',fit:'detail_fit',x:'detail_x',y:'detail_y',preview:'detail_preview',frame:'detail_frame'}
+  {key:'home',url:'home_image_url',fit:'home_fit',zoom:'home_zoom',x:'home_x',y:'home_y',preview:'home_preview',frame:'home_frame'},
+  {key:'catalog',url:'catalog_image_url',fit:'catalog_fit',zoom:'catalog_zoom',x:'catalog_x',y:'catalog_y',preview:'catalog_preview',frame:'catalog_frame'},
+  {key:'detail',url:'detail_image_url',fit:'detail_fit',zoom:'detail_zoom',x:'detail_x',y:'detail_y',preview:'detail_preview',frame:'detail_frame'}
 ];
 
 if (!supabaseReady) {
@@ -126,14 +126,17 @@ function openEditor(game=null){
   $('home_fit').value=game?.home_fit||game?.cover_fit||'cover';
   $('home_x').value=game?.home_position_x??game?.cover_position_x??50;
   $('home_y').value=game?.home_position_y??game?.cover_position_y??50;
+  $('home_zoom').value=game?.home_zoom??100;
   $('catalog_image_url').value=game?.catalog_image_url||'';
   $('catalog_fit').value=game?.catalog_fit||game?.cover_fit||'cover';
   $('catalog_x').value=game?.catalog_position_x??game?.cover_position_x??50;
   $('catalog_y').value=game?.catalog_position_y??game?.cover_position_y??50;
+  $('catalog_zoom').value=game?.catalog_zoom??100;
   $('detail_image_url').value=game?.detail_image_url||'';
   $('detail_fit').value=game?.detail_fit||game?.cover_fit||'cover';
   $('detail_x').value=game?.detail_position_x??game?.cover_position_x??50;
   $('detail_y').value=game?.detail_position_y??game?.cover_position_y??50;
+  $('detail_zoom').value=game?.detail_zoom??100;
   $('featured').checked=!!game?.featured;
   $('published').checked=game?!!game.published:true;
   slugEdited=!!game;
@@ -159,16 +162,19 @@ function updateAreaPreview(area){
   const isLocal=(area.key==='detail'&&$('media-kind').value==='banners')||(area.key!=='detail'&&$('media-kind').value==='covers');
   const src=(isLocal&&selectedPreviewUrl)?selectedPreviewUrl:(custom||$('cover_url').value.trim());
   img.style.objectFit=$(area.fit).value;
+  const zoom=Number($(area.zoom).value||100);
+  img.style.transform=zoom>100?`scale(${zoom/100})`:'none';
   img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
   $(area.y+'_value').textContent=$(area.y).value+'%';
+  $(area.zoom+'_value').textContent=zoom+'%';
   const empty=$(area.frame).querySelector('.preview-empty');
   if(src){img.hidden=false;empty.hidden=true;if(img.src!==src)img.src=src;}
   else{img.hidden=true;img.removeAttribute('src');empty.hidden=false;}
 }
 function updateAllPreviews(){imageAreas.forEach(updateAreaPreview);}
 for(const area of imageAreas){
-  [area.url,area.fit,area.x,area.y].forEach(id=>$(id).addEventListener('input',()=>updateAreaPreview(area)));
+  [area.url,area.fit,area.x,area.y,area.zoom].forEach(id=>$(id).addEventListener('input',()=>updateAreaPreview(area)));
   $(area.fit).addEventListener('change',()=>updateAreaPreview(area));
   $(area.frame).closest('.image-area').querySelectorAll('[data-frame-action]').forEach(button=>button.addEventListener('click',()=>{
     const presets={center:[50,50],top:[50,0],bottom:[50,100],left:[0,50],right:[100,50]};
@@ -228,9 +234,9 @@ $('game-form').addEventListener('submit',async e=>{
     title:$('title').value.trim(),slug,category:$('category').value.trim(),
     short_description:$('short_description').value,description:$('description').value,
     cover_url:$('cover_url').value.trim()||null,
-    home_image_url:$('home_image_url').value.trim()||null,home_fit:$('home_fit').value,home_position_x:Number($('home_x').value),home_position_y:Number($('home_y').value),
-    catalog_image_url:$('catalog_image_url').value.trim()||null,catalog_fit:$('catalog_fit').value,catalog_position_x:Number($('catalog_x').value),catalog_position_y:Number($('catalog_y').value),
-    detail_image_url:$('detail_image_url').value.trim()||null,detail_fit:$('detail_fit').value,detail_position_x:Number($('detail_x').value),detail_position_y:Number($('detail_y').value),
+    home_image_url:$('home_image_url').value.trim()||null,home_fit:$('home_fit').value,home_position_x:Number($('home_x').value),home_position_y:Number($('home_y').value),home_zoom:Number($('home_zoom').value),
+    catalog_image_url:$('catalog_image_url').value.trim()||null,catalog_fit:$('catalog_fit').value,catalog_position_x:Number($('catalog_x').value),catalog_position_y:Number($('catalog_y').value),catalog_zoom:Number($('catalog_zoom').value),
+    detail_image_url:$('detail_image_url').value.trim()||null,detail_fit:$('detail_fit').value,detail_position_x:Number($('detail_x').value),detail_position_y:Number($('detail_y').value),detail_zoom:Number($('detail_zoom').value),
     status:$('status').value,status_label:$('status').selectedOptions[0].text.toUpperCase(),
     action_label:$('action_label').value,action_url:$('action_url').value.trim()||null,body_html:$('body_html').value,
     featured:$('featured').checked,published:$('published').checked,updated_at:new Date().toISOString()
@@ -241,7 +247,7 @@ $('game-form').addEventListener('submit',async e=>{
     if(result.error&&isMissingImageColumns(result.error)){
       partial=true;
       const fallback={...fullPayload};
-      for(const key of ['home_image_url','home_fit','home_position_x','home_position_y','catalog_image_url','catalog_fit','catalog_position_x','catalog_position_y','detail_image_url','detail_fit','detail_position_x','detail_position_y'])delete fallback[key];
+      for(const key of ['home_image_url','home_fit','home_position_x','home_position_y','home_zoom','catalog_image_url','catalog_fit','catalog_position_x','catalog_position_y','catalog_zoom','detail_image_url','detail_fit','detail_position_x','detail_position_y','detail_zoom'])delete fallback[key];
       result=await saveGame(fallback);
     }
     if(result.error)throw result.error;
