@@ -130,30 +130,60 @@ $('game-form').addEventListener('submit', async e => {
   await loadMedia();
 });
 
+function showPreview(src) {
+  const img = $('cover-preview');
+  img.onload = () => {
+    img.hidden = false;
+    img.style.display = 'block';
+  };
+  img.onerror = () => {
+    img.hidden = true;
+    img.style.display = 'none';
+    alert('Não foi possível carregar a pré-visualização desta imagem.');
+  };
+  img.src = src;
+  img.hidden = false;
+  img.style.display = 'block';
+}
+
 function updateCoverPreview() {
   const url = $('cover_url').value.trim();
   const img = $('cover-preview');
+  if (img.dataset.objectUrl) {
+    URL.revokeObjectURL(img.dataset.objectUrl);
+    delete img.dataset.objectUrl;
+  }
   if (url) {
-    img.src = url;
-    img.hidden = false;
+    showPreview(url);
   } else {
     img.removeAttribute('src');
     img.hidden = true;
+    img.style.display = 'none';
   }
 }
 
 $('cover_url').addEventListener('input',updateCoverPreview);
 $('cover-file').addEventListener('change',() => {
   const file = $('cover-file').files[0];
+  const img = $('cover-preview');
   if (!file) {
     updateCoverPreview();
     return;
   }
-  const img = $('cover-preview');
+  if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) {
+    alert('Formato não permitido. Use JPG, PNG, WebP ou GIF.');
+    $('cover-file').value = '';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    alert('A imagem ultrapassa o limite de 5 MB.');
+    $('cover-file').value = '';
+    return;
+  }
   if (img.dataset.objectUrl) URL.revokeObjectURL(img.dataset.objectUrl);
-  img.dataset.objectUrl = URL.createObjectURL(file);
-  img.src = img.dataset.objectUrl;
-  img.hidden = false;
+  const objectUrl = URL.createObjectURL(file);
+  img.dataset.objectUrl = objectUrl;
+  showPreview(objectUrl);
 });
 
 function validateImage(file) {
