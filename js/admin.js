@@ -266,20 +266,28 @@ async function loadMedia() {
       img.alt = file.name;
       const name = document.createElement('span');
       name.textContent = (result.folder === 'covers' ? 'CAPA · ' : 'BANNER · ') + file.name;
-      const use = document.createElement('button');
-      use.type = 'button';
-      use.textContent = result.folder === 'banners' ? 'Usar como banner' : 'Usar como capa padrão';
-      use.onclick = () => {
-        if (result.folder === 'banners') {
-          $('detail_image_url').value = urlData.publicUrl;
-          updateAreaPreview(imageAreas[2]);
-        } else {
-          $('cover_url').value = urlData.publicUrl;
-          updateAllPreviews();
-        }
-        window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-        alert('Imagem aplicada. Clique em “Salvar jogo” para publicar.');
+      const makeApplyButton = (label, target) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.onclick = () => {
+          if (target === 'cover_url') {
+            $(target).value = urlData.publicUrl;
+            updateAllPreviews();
+          } else {
+            $(target).value = urlData.publicUrl;
+            const area = imageAreas.find(item => item.url === target);
+            if (area) updateAreaPreview(area);
+          }
+          window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+          alert('Imagem aplicada. Clique em “Salvar jogo” para publicar.');
+        };
+        return button;
       };
+      const useDefault = makeApplyButton('Usar como padrão', 'cover_url');
+      const useHome = makeApplyButton('Usar na página inicial', 'home_image_url');
+      const useCatalog = makeApplyButton('Usar na loja', 'catalog_image_url');
+      const useDetail = makeApplyButton('Usar na página do jogo', 'detail_image_url');
       const replaceInput = document.createElement('input');
       replaceInput.type = 'file';
       replaceInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
@@ -325,7 +333,7 @@ async function loadMedia() {
           alert('Não foi possível excluir a imagem: ' + err.message);
         }
       };
-      item.append(img,name,use,replace,replaceInput,remove);
+      item.append(img,name,useDefault,useHome,useCatalog,useDetail,replace,replaceInput,remove);
       area.append(item);
     }
   }
