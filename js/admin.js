@@ -157,7 +157,7 @@ function updateAreaPreview(area){
   const img=$(area.preview);
   const custom=$(area.url).value.trim();
   const isLocal=(area.key==='detail'&&$('media-kind').value==='banners')||(area.key!=='detail'&&$('media-kind').value==='covers');
-  const src=(isLocal&&area.key==='detail'&&selectedPreviewUrl)?selectedPreviewUrl:(custom||(isLocal?selectedPreviewUrl:null)||$('cover_url').value.trim());
+  const src=(isLocal&&selectedPreviewUrl)?selectedPreviewUrl:(custom||$('cover_url').value.trim());
   img.style.objectFit=$(area.fit).value;
   img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
@@ -170,6 +170,12 @@ function updateAllPreviews(){imageAreas.forEach(updateAreaPreview);}
 for(const area of imageAreas){
   [area.url,area.fit,area.x,area.y].forEach(id=>$(id).addEventListener('input',()=>updateAreaPreview(area)));
   $(area.fit).addEventListener('change',()=>updateAreaPreview(area));
+  $(area.frame).closest('.image-area').querySelectorAll('[data-frame-action]').forEach(button=>button.addEventListener('click',()=>{
+    const presets={center:[50,50],top:[50,0],bottom:[50,100],left:[0,50],right:[100,50]};
+    const [x,y]=presets[button.dataset.frameAction]||[50,50];
+    $(area.x).value=x;$(area.y).value=y;updateAreaPreview(area);
+    $('save-status').textContent='Enquadramento alterado. Salve o projeto para confirmar.';
+  }));
   const frame=$(area.frame);
   let dragging=false;
   frame.addEventListener('pointerdown',e=>{
