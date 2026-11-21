@@ -1,5 +1,22 @@
 import {getPublishedGames} from './supabase.js';
 const fallback=[{title:'GridLife',slug:'gridlife',category:'SIMULAÇÃO · MOTORSPORT',short_description:'Domine as pistas neste simulador e gerenciador de carreira motorsport.',description:'A experiência de automobilismo da Elefante Triste Studio. Acompanhe o desenvolvimento do projeto e suas próximas novidades.',status:'desenvolvimento',status_label:'EM DESENVOLVIMENTO',initials:'GL',version:'Em desenvolvimento'},{title:'Shift’s Over',slug:'shifts-over',category:'SIMULAÇÃO · GESTÃO',short_description:'Você é capaz de gerenciar um estabelecimento sozinho ou com amigos?',description:'Um projeto de simulação e gestão em desenvolvimento. Mais informações serão publicadas em breve.',status:'desenvolvimento',status_label:'EM DESENVOLVIMENTO',initials:'SO'}];
-const slug=new URLSearchParams(location.search).get('slug');let games=fallback;try{const remote=await getPublishedGames();if(remote?.length)games=remote;}catch(e){console.warn(e)}const g=games.find(x=>x.slug===slug);const $=id=>document.getElementById(id);if(!g){$('game-title').textContent='Projeto não encontrado';$('game-description').textContent='Este jogo não está disponível no catálogo.';$('game-action').href='loja.html';}else{$('game-title').textContent=g.title;$('game-category').textContent=g.category||'JOGO INDEPENDENTE';$('game-description').textContent=g.description||g.short_description||'';$('game-status').textContent=g.status_label||g.status||'Projeto';$('game-version').textContent=g.version?`Versão: ${g.version}`:'';const coverFit = (g.detail_fit || g.cover_fit) === 'contain' ? 'contain' : 'cover';
-const coverX = Math.max(0,Math.min(100,Number(g.detail_position_x ?? g.cover_position_x ?? 50)));
-const coverY = Math.max(0,Math.min(100,Number(g.detail_position_y ?? g.cover_position_y ?? 50)));const cover=document.querySelector('.game-cover');cover.className=`game-cover ${g.slug==='gridlife'?'art-gridlife':'art-shift'}`;cover.innerHTML=`<span>${g.status_label||'PROJETO'}</span>`;if(g.detail_image_url || g.cover_url){cover.style.backgroundImage=`linear-gradient(#0006,#0006),url('${g.detail_image_url || g.cover_url}')`;cover.style.backgroundSize=Number(g.detail_zoom)>100?`${g.detail_zoom}% auto`:`${coverFit}`;cover.style.backgroundPosition=`${coverX}% ${coverY}%`;cover.style.backgroundRepeat='no-repeat';}const action=$('game-action');if(g.action_url){action.href=g.action_url;action.target='_blank';action.rel='noopener noreferrer';action.textContent=g.action_label||'Acessar projeto ↗';}else{action.href='loja.html';action.textContent='Voltar ao catálogo ↗';}if(g.body_html){const frame=document.createElement('iframe');frame.setAttribute('sandbox','allow-scripts allow-forms allow-popups');frame.title='Conteúdo adicional do projeto';frame.style='width:100%;min-height:300px;border:1px solid #34333a;background:#18181d';frame.srcdoc=g.body_html;$('game-body').append(frame);}}
+const slug=new URLSearchParams(location.search).get('slug');let games=fallback;
+try{const remote=await getPublishedGames();if(remote?.length)games=remote;}catch(e){console.warn(e)}
+const g=games.find(x=>x.slug===slug);const $=id=>document.getElementById(id);
+if(!g){$('game-title').textContent='Projeto não encontrado';$('game-description').textContent='Este jogo não está disponível no catálogo.';$('game-action').href='loja.html';}
+else{
+ $('game-title').textContent=g.title;$('game-category').textContent=g.category||'JOGO INDEPENDENTE';$('game-description').textContent=g.description||g.short_description||'';$('game-status').textContent=g.status_label||g.status||'Projeto';$('game-version').textContent=g.version?`Versão: ${g.version}`:'';
+ const cover=document.querySelector('.game-cover');cover.className=`game-cover ${g.slug==='gridlife'?'art-gridlife':'art-shift'}`;cover.innerHTML=`<span>${g.status_label||'PROJETO'}</span>`;
+ const src=g.detail_image_url||g.cover_url||'';
+ if(src){
+  const fit=(g.detail_fit||g.cover_fit)==='contain'?'contain':'cover';
+  const x=Math.max(0,Math.min(100,Number(g.detail_position_x??g.cover_position_x??50)));
+  const y=Math.max(0,Math.min(100,Number(g.detail_position_y??g.cover_position_y??50)));
+  const zoom=Math.max(100,Math.min(200,Number(g.detail_zoom??100)));
+  const img=document.createElement('img');img.className='public-frame-image';img.alt=`Arte de ${g.title}`;img.src=src;img.style.objectFit=fit;img.style.objectPosition=`${x}% ${y}%`;img.style.transform=`scale(${zoom/100})`;cover.prepend(img);
+ }
+ const action=$('game-action');
+ if(g.action_url){action.href=g.action_url;action.target='_blank';action.rel='noopener noreferrer';action.textContent=g.action_label||'Acessar projeto ↗';}
+ else{action.href='loja.html';action.textContent='Voltar ao catálogo ↗';}
+ if(g.body_html){const frame=document.createElement('iframe');frame.setAttribute('sandbox','allow-scripts allow-forms allow-popups');frame.title='Conteúdo adicional do projeto';frame.style='width:100%;min-height:300px;border:1px solid #34333a;background:#18181d';frame.srcdoc=g.body_html;$('game-body').append(frame);}
+}
