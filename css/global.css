@@ -8,3 +8,14 @@
 .public-frame-image{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;transform-origin:center center;pointer-events:none;z-index:0;}
 .feature-image .image-label,.catalog-art>span,.game-cover>span{z-index:2;}
 .coming-art{position:relative;overflow:hidden;}
+
+
+/* Enquadramento idêntico entre prévia e site: todas as áreas usam 16:9. */
+.image-preview{height:auto!important;aspect-ratio:16/9;width:100%;}
+.image-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;transform-origin:center center;}
+.feature-image{height:auto!important;aspect-ratio:16/9;}
+.catalog-art{height:auto!important;aspect-ratio:16/9;}
+.game-cover{height:auto!important;aspect-ratio:16/9;min-height:0;max-height:520px;}
+.coming-art{height:auto!important;aspect-ratio:16/9;}
+.public-frame-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;transform-origin:center center;}
+@media(max-width:520px){.feature-image,.catalog-art,.game-cover,.coming-art{height:auto!important;aspect-ratio:16/9;}}
