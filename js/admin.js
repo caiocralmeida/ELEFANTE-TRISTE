@@ -85,10 +85,19 @@ function fillForm(g) {
   for (const k of ['id','title','slug','category','short_description','description','cover_url','status','action_label','action_url','body_html']) {
     $(k === 'id' ? 'game-id' : k).value = g[k] ?? '';
   }
-  $('cover-fit').value = g.cover_fit || 'cover';
-  $('cover-position-x').value = g.cover_position_x ?? 50;
-  $('cover-position-y').value = g.cover_position_y ?? 50;
-  updateFramingLabels();
+  $('home_image_url').value = g.home_image_url || '';
+  $('home_fit').value = g.home_fit || g.cover_fit || 'cover';
+  $('home_x').value = g.home_position_x ?? g.cover_position_x ?? 50;
+  $('home_y').value = g.home_position_y ?? g.cover_position_y ?? 50;
+  $('catalog_image_url').value = g.catalog_image_url || '';
+  $('catalog_fit').value = g.catalog_fit || g.cover_fit || 'cover';
+  $('catalog_x').value = g.catalog_position_x ?? g.cover_position_x ?? 50;
+  $('catalog_y').value = g.catalog_position_y ?? g.cover_position_y ?? 50;
+  $('detail_image_url').value = g.detail_image_url || '';
+  $('detail_fit').value = g.detail_fit || g.cover_fit || 'cover';
+  $('detail_x').value = g.detail_position_x ?? g.cover_position_x ?? 50;
+  $('detail_y').value = g.detail_position_y ?? g.cover_position_y ?? 50;
+  updateAllPreviews();
   $('featured').checked = !!g.featured;
   $('published').checked = !!g.published;
   updateCoverPreview();
@@ -112,9 +121,18 @@ $('game-form').addEventListener('submit', async e => {
     short_description:$('short_description').value,
     description:$('description').value,
     cover_url:$('cover_url').value || null,
-    cover_fit:$('cover-fit').value,
-    cover_position_x:Number($('cover-position-x').value),
-    cover_position_y:Number($('cover-position-y').value),
+    home_image_url:$('home_image_url').value || null,
+    home_fit:$('home_fit').value,
+    home_position_x:Number($('home_x').value),
+    home_position_y:Number($('home_y').value),
+    catalog_image_url:$('catalog_image_url').value || null,
+    catalog_fit:$('catalog_fit').value,
+    catalog_position_x:Number($('catalog_x').value),
+    catalog_position_y:Number($('catalog_y').value),
+    detail_image_url:$('detail_image_url').value || null,
+    detail_fit:$('detail_fit').value,
+    detail_position_x:Number($('detail_x').value),
+    detail_position_y:Number($('detail_y').value),
     status:$('status').value,
     status_label:$('status').selectedOptions[0].text.toUpperCase(),
     action_label:$('action_label').value,
@@ -137,56 +155,27 @@ $('game-form').addEventListener('submit', async e => {
   await loadMedia();
 });
 
-function updateFramingLabels() {
-  $('cover-position-x-value').textContent = $('cover-position-x').value + '%';
-  $('cover-position-y-value').textContent = $('cover-position-y').value + '%';
+const imageAreas = [
+  {key:'home',url:'home_image_url',fit:'home_fit',x:'home_x',y:'home_y',preview:'home_preview'},
+  {key:'catalog',url:'catalog_image_url',fit:'catalog_fit',x:'catalog_x',y:'catalog_y',preview:'catalog_preview'},
+  {key:'detail',url:'detail_image_url',fit:'detail_fit',x:'detail_x',y:'detail_y',preview:'detail_preview'}
+];
+function updateAreaPreview(area) {
+  const img=$(area.preview);
+  const source=$(area.url).value.trim() || $('cover_url').value.trim();
+  img.style.objectFit=$(area.fit).value;
+  img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
+  $(area.x+'_value').textContent=$(area.x).value+'%';
+  $(area.y+'_value').textContent=$(area.y).value+'%';
+  if(source){img.src=source;img.hidden=false;}else{img.removeAttribute('src');img.hidden=true;}
 }
-
-function applyPreviewFraming() {
-  const img = $('cover-preview');
-  img.style.objectFit = $('cover-fit').value;
-  img.style.objectPosition = $('cover-position-x').value + '% ' + $('cover-position-y').value + '%';
-  updateFramingLabels();
+function updateAllPreviews(){imageAreas.forEach(updateAreaPreview);}
+for(const area of imageAreas){
+  [area.url,area.fit,area.x,area.y].forEach(id=>$(id).addEventListener('input',()=>updateAreaPreview(area)));
+  $(area.fit).addEventListener('change',()=>updateAreaPreview(area));
 }
-
-$('cover-fit').addEventListener('change',applyPreviewFraming);
-$('cover-position-x').addEventListener('input',applyPreviewFraming);
-$('cover-position-y').addEventListener('input',applyPreviewFraming);
-
-function showPreview(src) {
-  const img = $('cover-preview');
-  applyPreviewFraming();
-  img.onload = () => {
-    img.hidden = false;
-    img.style.display = 'block';
-  };
-  img.onerror = () => {
-    img.hidden = true;
-    img.style.display = 'none';
-    alert('Não foi possível carregar a pré-visualização desta imagem.');
-  };
-  img.src = src;
-  img.hidden = false;
-  img.style.display = 'block';
-}
-
-function updateCoverPreview() {
-  const url = $('cover_url').value.trim();
-  const img = $('cover-preview');
-  if (img.dataset.objectUrl) {
-    URL.revokeObjectURL(img.dataset.objectUrl);
-    delete img.dataset.objectUrl;
-  }
-  if (url) {
-    showPreview(url);
-  } else {
-    img.removeAttribute('src');
-    img.hidden = true;
-    img.style.display = 'none';
-  }
-}
-
-$('cover_url').addEventListener('input',updateCoverPreview);
+function updateCoverPreview(){updateAllPreviews();}
+$('cover_url').addEventListener('input',updateAllPreviews);
 $('cover-file').addEventListener('change',() => {
   const file = $('cover-file').files[0];
   const img = $('cover-preview');
@@ -246,10 +235,12 @@ $('upload-cover').addEventListener('click',async () => {
     const publicUrl = await uploadImage(file,path);
     if (folder === 'covers') {
       $('cover_url').value = publicUrl;
-      updateCoverPreview();
-      alert('Capa enviada! Clique em “Salvar jogo” para aplicar no catálogo e na página do projeto.');
+      updateAllPreviews();
+      alert('Imagem enviada como capa padrão. Se quiser, ajuste as imagens específicas de cada área antes de salvar.');
     } else {
-      alert('Banner enviado e salvo na biblioteca. Use “Aplicar como capa” para utilizá-lo na página do projeto e no catálogo.');
+      $('detail_image_url').value = publicUrl;
+      updateAreaPreview(imageAreas[2]);
+      alert('Banner aplicado à página do jogo. Clique em “Salvar jogo” para publicar.');
     }
     $('cover-file').value = '';
     await loadMedia();
@@ -293,12 +284,17 @@ async function loadMedia() {
       name.textContent = (result.folder === 'covers' ? 'CAPA · ' : 'BANNER · ') + file.name;
       const use = document.createElement('button');
       use.type = 'button';
-      use.textContent = 'Aplicar como capa';
+      use.textContent = result.folder === 'banners' ? 'Usar como banner' : 'Usar como capa padrão';
       use.onclick = () => {
-        $('cover_url').value = urlData.publicUrl;
-        updateCoverPreview();
+        if (result.folder === 'banners') {
+          $('detail_image_url').value = urlData.publicUrl;
+          updateAreaPreview(imageAreas[2]);
+        } else {
+          $('cover_url').value = urlData.publicUrl;
+          updateAllPreviews();
+        }
         window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-        alert('Imagem aplicada ao formulário. Clique em “Salvar jogo” para publicar a alteração.');
+        alert('Imagem aplicada. Clique em “Salvar jogo” para publicar.');
       };
       const replaceInput = document.createElement('input');
       replaceInput.type = 'file';
