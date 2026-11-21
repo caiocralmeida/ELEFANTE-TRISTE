@@ -7,6 +7,7 @@ let currentUser = null;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
 const EXT = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+let selectedPreviewUrl = null;
 
 if (!supabaseReady) {
   $('login-error').textContent = 'Supabase ainda não configurado. Confira js/config.js.';
@@ -162,7 +163,9 @@ const imageAreas = [
 ];
 function updateAreaPreview(area) {
   const img=$(area.preview);
-  const source=$(area.url).value.trim() || $('cover_url').value.trim();
+  const customSource=$(area.url).value.trim();
+  const defaultSource=$('cover_url').value.trim();
+  const source=customSource || defaultSource || ((area.key==='detail' && $('media-kind').value==='banners') || (area.key!=='detail' && $('media-kind').value==='covers') ? selectedPreviewUrl : null);
   img.style.objectFit=$(area.fit).value;
   img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
@@ -178,10 +181,20 @@ function updateCoverPreview(){updateAllPreviews();}
 $('cover_url').addEventListener('input',updateAllPreviews);
 $('cover-file').addEventListener('change',() => {
   const file = $('cover-file').files[0];
-  if (!file) return;
-  try { validateImage(file); }
-  catch (err) { alert(err.message); $('cover-file').value=''; }
+  if (selectedPreviewUrl) URL.revokeObjectURL(selectedPreviewUrl);
+  selectedPreviewUrl = null;
+  if (!file) { updateAllPreviews(); return; }
+  try {
+    validateImage(file);
+    selectedPreviewUrl = URL.createObjectURL(file);
+    updateAllPreviews();
+  } catch (err) {
+    alert(err.message);
+    $('cover-file').value='';
+    updateAllPreviews();
+  }
 });
+$('media-kind').addEventListener('change',updateAllPreviews);
 
 function validateImage(file) {
   if (!file) throw new Error('Escolha uma imagem primeiro.');
@@ -227,11 +240,15 @@ $('upload-cover').addEventListener('click',async () => {
       alert('Banner aplicado à página do jogo. Clique em “Salvar jogo” para publicar.');
     }
     $('cover-file').value = '';
+    if (selectedPreviewUrl) URL.revokeObjectURL(selectedPreviewUrl);
+    selectedPreviewUrl = null;
+    updateAllPreviews();
     await loadMedia();
     btn.disabled = false;
     btn.textContent = 'Enviar imagem';
   } catch (err) {
-    alert('Não foi possível enviar a imagem: ' + err.message);
+    console.error('Falha no upload de imagem:',err);
+    alert('O Supabase recusou o envio da imagem. Detalhe: ' + (err.message || err.error_description || String(err)));
     $('upload-cover').disabled = false;
     $('upload-cover').textContent = 'Enviar imagem';
   }
