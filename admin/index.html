@@ -72,23 +72,40 @@
           <div class="editor-column">
             <section class="editor-card"><h2>Imagens do projeto</h2><p class="hint">Cada área pode ter uma imagem e um enquadramento próprios. Arraste sobre a prévia para ajustar a posição.</p>
               <div class="form-group"><label for="cover_url">Imagem padrão (URL opcional)</label><input class="field" id="cover_url" type="url" placeholder="URL da imagem padrão"></div>
+              <div class="image-areas-grid">
               <div class="image-area">
                 <div class="image-area-head"><strong>01 · Página inicial</strong><span class="status-pill">DESTAQUE</span></div>
-                <div class="form-group"><label for="home_image_url">Imagem específica (opcional)</label><input class="field" id="home_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
-                <div class="image-preview" id="home_frame"><img id="home_preview" alt="Prévia da página inicial" hidden><span class="preview-empty">Prévia da página inicial</span></div>
-                <div class="image-controls"><div class="form-group wide"><label for="home_fit">Exibição</label><select class="field" id="home_fit"><option value="cover">Preencher área</option><option value="contain">Mostrar imagem inteira</option></select></div><div><div class="range-row"><label for="home_x">Horizontal</label><span id="home_x_value">50%</span></div><input id="home_x" type="range" min="0" max="100" value="50"></div><div><div class="range-row"><label for="home_y">Vertical</label><span id="home_y_value">50%</span></div><input id="home_y" type="range" min="0" max="100" value="50"></div></div>
+                <div class="form-group"><label for="home_image_url">Imagem específica (URL opcional)</label><input class="field" id="home_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
+                <div class="image-preview" id="home_frame" title="Arraste a imagem para ajustar o enquadramento"><img id="home_preview" alt="Prévia da página inicial" hidden><span class="preview-empty">Prévia da página inicial</span></div>
+                <div class="image-controls">
+                  <div class="form-group wide"><label for="home_fit">Modo de exibição</label><select class="field" id="home_fit"><option value="cover">Preencher área · pode cortar</option><option value="contain">Imagem inteira · sem corte</option></select></div>
+                  <div><div class="range-row"><label for="home_x">Horizontal</label><span id="home_x_value">50%</span></div><input id="home_x" type="range" min="0" max="100" value="50"></div>
+                  <div><div class="range-row"><label for="home_y">Vertical</label><span id="home_y_value">50%</span></div><input id="home_y" type="range" min="0" max="100" value="50"></div>
+                </div>
+                <div class="frame-shortcuts"><button type="button" data-frame-action="center">Centralizar</button><button type="button" data-frame-action="top">Topo</button><button type="button" data-frame-action="bottom">Inferior</button><button type="button" data-frame-action="left">Esquerda</button><button type="button" data-frame-action="right">Direita</button></div>
               </div>
               <div class="image-area">
                 <div class="image-area-head"><strong>02 · Loja / catálogo</strong><span class="status-pill">CARD</span></div>
-                <div class="form-group"><label for="catalog_image_url">Imagem específica (opcional)</label><input class="field" id="catalog_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
-                <div class="image-preview" id="catalog_frame"><img id="catalog_preview" alt="Prévia da loja" hidden><span class="preview-empty">Prévia do catálogo</span></div>
-                <div class="image-controls"><div class="form-group wide"><label for="catalog_fit">Exibição</label><select class="field" id="catalog_fit"><option value="cover">Preencher área</option><option value="contain">Mostrar imagem inteira</option></select></div><div><div class="range-row"><label for="catalog_x">Horizontal</label><span id="catalog_x_value">50%</span></div><input id="catalog_x" type="range" min="0" max="100" value="50"></div><div><div class="range-row"><label for="catalog_y">Vertical</label><span id="catalog_y_value">50%</span></div><input id="catalog_y" type="range" min="0" max="100" value="50"></div></div>
+                <div class="form-group"><label for="catalog_image_url">Imagem específica (URL opcional)</label><input class="field" id="catalog_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
+                <div class="image-preview" id="catalog_frame" title="Arraste a imagem para ajustar o enquadramento"><img id="catalog_preview" alt="Prévia da loja" hidden><span class="preview-empty">Prévia do catálogo</span></div>
+                <div class="image-controls">
+                  <div class="form-group wide"><label for="catalog_fit">Modo de exibição</label><select class="field" id="catalog_fit"><option value="cover">Preencher área · pode cortar</option><option value="contain">Imagem inteira · sem corte</option></select></div>
+                  <div><div class="range-row"><label for="catalog_x">Horizontal</label><span id="catalog_x_value">50%</span></div><input id="catalog_x" type="range" min="0" max="100" value="50"></div>
+                  <div><div class="range-row"><label for="catalog_y">Vertical</label><span id="catalog_y_value">50%</span></div><input id="catalog_y" type="range" min="0" max="100" value="50"></div>
+                </div>
+                <div class="frame-shortcuts"><button type="button" data-frame-action="center">Centralizar</button><button type="button" data-frame-action="top">Topo</button><button type="button" data-frame-action="bottom">Inferior</button><button type="button" data-frame-action="left">Esquerda</button><button type="button" data-frame-action="right">Direita</button></div>
               </div>
               <div class="image-area">
                 <div class="image-area-head"><strong>03 · Página do jogo</strong><span class="status-pill">BANNER</span></div>
-                <div class="form-group"><label for="detail_image_url">Imagem específica (opcional)</label><input class="field" id="detail_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
-                <div class="image-preview" id="detail_frame"><img id="detail_preview" alt="Prévia da página do jogo" hidden><span class="preview-empty">Prévia do banner</span></div>
-                <div class="image-controls"><div class="form-group wide"><label for="detail_fit">Exibição</label><select class="field" id="detail_fit"><option value="cover">Preencher área</option><option value="contain">Mostrar imagem inteira</option></select></div><div><div class="range-row"><label for="detail_x">Horizontal</label><span id="detail_x_value">50%</span></div><input id="detail_x" type="range" min="0" max="100" value="50"></div><div><div class="range-row"><label for="detail_y">Vertical</label><span id="detail_y_value">50%</span></div><input id="detail_y" type="range" min="0" max="100" value="50"></div></div>
+                <div class="form-group"><label for="detail_image_url">Imagem específica (URL opcional)</label><input class="field" id="detail_image_url" type="url" placeholder="Vazia = imagem padrão"></div>
+                <div class="image-preview" id="detail_frame" title="Arraste a imagem para ajustar o enquadramento"><img id="detail_preview" alt="Prévia da página do jogo" hidden><span class="preview-empty">Prévia do banner</span></div>
+                <div class="image-controls">
+                  <div class="form-group wide"><label for="detail_fit">Modo de exibição</label><select class="field" id="detail_fit"><option value="cover">Preencher área · pode cortar</option><option value="contain">Imagem inteira · sem corte</option></select></div>
+                  <div><div class="range-row"><label for="detail_x">Horizontal</label><span id="detail_x_value">50%</span></div><input id="detail_x" type="range" min="0" max="100" value="50"></div>
+                  <div><div class="range-row"><label for="detail_y">Vertical</label><span id="detail_y_value">50%</span></div><input id="detail_y" type="range" min="0" max="100" value="50"></div>
+                </div>
+                <div class="frame-shortcuts"><button type="button" data-frame-action="center">Centralizar</button><button type="button" data-frame-action="top">Topo</button><button type="button" data-frame-action="bottom">Inferior</button><button type="button" data-frame-action="left">Esquerda</button><button type="button" data-frame-action="right">Direita</button></div>
+              </div>
               </div>
             </section>
             <section class="editor-card"><h2>Enviar nova imagem</h2><p class="hint">Envie para a biblioteca e aplique no projeto. JPG, PNG, WebP ou GIF até 5 MB.</p>
