@@ -70,6 +70,11 @@
             </section>
           </div>
           <div class="editor-column">
+            <section class="editor-card"><h2>Enviar nova imagem</h2><p class="hint">Envie para a biblioteca e aplique no projeto. JPG, PNG, WebP ou GIF até 5 MB.</p>
+              <div class="upload-panel" id="upload-drop"><strong>Solte uma imagem aqui</strong><p>ou escolha um arquivo do computador</p><div class="upload-actions"><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="field"><select id="media-kind" class="field"><option value="covers">Imagem padrão / capa</option><option value="banners">Banner da página do jogo</option></select><button type="button" class="btn btn-quiet" id="upload-cover">Enviar imagem</button></div><div class="upload-status" id="upload-status"></div></div>
+            </section>
+          </div>
+        </div>
             <section class="editor-card"><h2>Imagens do projeto</h2><p class="hint">Cada área pode ter uma imagem e um enquadramento próprios. Arraste sobre a prévia para ajustar a posição.</p>
               <div class="form-group"><label for="cover_url">Imagem padrão (URL opcional)</label><input class="field" id="cover_url" type="url" placeholder="URL da imagem padrão"></div>
               <div class="image-areas-grid">
@@ -108,10 +113,6 @@
               </div>
               </div>
             </section>
-            <section class="editor-card"><h2>Enviar nova imagem</h2><p class="hint">Envie para a biblioteca e aplique no projeto. JPG, PNG, WebP ou GIF até 5 MB.</p>
-              <div class="upload-panel" id="upload-drop"><strong>Solte uma imagem aqui</strong><p>ou escolha um arquivo do computador</p><div class="upload-actions"><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="field"><select id="media-kind" class="field"><option value="covers">Imagem padrão / capa</option><option value="banners">Banner da página do jogo</option></select><button type="button" class="btn btn-quiet" id="upload-cover">Enviar imagem</button></div><div class="upload-status" id="upload-status"></div></div>
-            </section>
-          </div>
         </div>
         <div class="savebar"><span id="save-status">As alterações ainda não foram salvas.</span><div style="display:flex;gap:8px"><button type="button" class="btn btn-quiet" id="clear-form">Descartar</button><button type="submit" class="btn btn-primary" id="save-game">Salvar projeto</button></div></div>
       </form>
