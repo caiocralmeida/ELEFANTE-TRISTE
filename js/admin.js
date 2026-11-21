@@ -165,7 +165,10 @@ function updateAreaPreview(area) {
   const img=$(area.preview);
   const customSource=$(area.url).value.trim();
   const defaultSource=$('cover_url').value.trim();
-  const source=customSource || defaultSource || ((area.key==='detail' && $('media-kind').value==='banners') || (area.key!=='detail' && $('media-kind').value==='covers') ? selectedPreviewUrl : null);
+  const isSelectedFileForArea = (area.key==='detail' && $('media-kind').value==='banners') || (area.key!=='detail' && $('media-kind').value==='covers');
+  // A imagem recém-selecionada deve aparecer na prévia antes do upload.
+  // Uma URL específica da área continua tendo prioridade sobre a imagem padrão.
+  const source = customSource || (isSelectedFileForArea ? selectedPreviewUrl : null) || defaultSource;
   img.style.objectFit=$(area.fit).value;
   img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
