@@ -2,370 +2,317 @@ import {supabase,supabaseReady} from './supabase.js';
 
 const $ = id => document.getElementById(id);
 const login = $('login-panel');
-const dash = $('dashboard');
-let currentUser = null;
+const dashboard = $('dashboard');
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
 const EXT = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+let currentUser = null;
+let games = [];
+let mediaItems = [];
 let selectedPreviewUrl = null;
+let editingId = '';
+let mediaFilter = 'all';
+let slugEdited = false;
+
+const imageAreas = [
+  {key:'home',url:'home_image_url',fit:'home_fit',x:'home_x',y:'home_y',preview:'home_preview',frame:'home_frame'},
+  {key:'catalog',url:'catalog_image_url',fit:'catalog_fit',x:'catalog_x',y:'catalog_y',preview:'catalog_preview',frame:'catalog_frame'},
+  {key:'detail',url:'detail_image_url',fit:'detail_fit',x:'detail_x',y:'detail_y',preview:'detail_preview',frame:'detail_frame'}
+];
 
 if (!supabaseReady) {
-  $('login-error').textContent = 'Supabase ainda não configurado. Confira js/config.js.';
-  $('login-form').addEventListener('submit', e => {
-    e.preventDefault();
-    $('login-error').textContent = 'Configure o Supabase para habilitar autenticação segura.';
-  });
+  $('login-error').textContent = 'Supabase não configurado. Confira js/config.js.';
+  $('login-form').addEventListener('submit',e=>{e.preventDefault();$('login-error').textContent='Configure o Supabase para habilitar o painel.';});
 } else {
-  const {data:{session}} = await supabase.auth.getSession();
-  if (session) await showDashboard();
-  $('login-form').addEventListener('submit', async e => {
+  try {
+    const {data:{session}} = await supabase.auth.getSession();
+    if(session) await showDashboard();
+  } catch(err) {
+    $('login-error').textContent = 'Não foi possível verificar a sessão: '+err.message;
+  }
+  $('login-form').addEventListener('submit',async e=>{
     e.preventDefault();
-    $('login-error').textContent = 'Verificando acesso...';
-    const {error} = await supabase.auth.signInWithPassword({
-      email:$('email').value,
-      password:$('password').value
-    });
-    if (error) {
-      $('login-error').textContent = error.message;
-      return;
-    }
+    $('login-error').textContent='Verificando acesso...';
+    const {error} = await supabase.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+    if(error){$('login-error').textContent=error.message;return;}
     await showDashboard();
   });
 }
 
-async function showDashboard() {
-  const {data:{user}} = await supabase.auth.getUser();
-  currentUser = user;
-  login.hidden = true;
-  dash.hidden = false;
+async function showDashboard(){
+  const {data:{user},error} = await supabase.auth.getUser();
+  if(error || !user){$('login-error').textContent=error?.message||'Sessão inválida.';return;}
+  currentUser=user;
+  $('user-email').textContent=user.email||'Administrador';
+  login.hidden=true;
+  dashboard.hidden=false;
   await loadGames();
   await loadMedia();
+  setView('overview');
 }
 
-$('logout').addEventListener('click', async () => {
-  if (supabase) await supabase.auth.signOut();
-  location.reload();
-});
+$('logout').addEventListener('click',async()=>{await supabase.auth.signOut();location.reload();});
 
-async function loadGames() {
-  const {data,error} = await supabase.from('games').select('*').order('sort_order');
-  if (error) {
-    $('games-list').textContent = error.message;
-    return;
-  }
-  const list = $('games-list');
-  list.innerHTML = '';
-  (data || []).forEach(g => {
-    const row = document.createElement('div');
-    row.className = 'game-row';
-    const name = document.createElement('span');
-    name.textContent = `${g.title} · ${g.published ? 'Publicado' : 'Rascunho'}`;
-    const actions = document.createElement('span');
-    const edit = document.createElement('button');
-    edit.textContent = 'Editar';
-    edit.onclick = () => fillForm(g);
-    const del = document.createElement('button');
-    del.textContent = 'Excluir';
-    del.onclick = async () => {
-      if (!confirm(`Excluir ${g.title}?`)) return;
-      const {error} = await supabase.from('games').delete().eq('id',g.id);
-      if (error) alert(error.message);
-      else {
-        await loadGames();
-        await loadMedia();
-      }
-    };
-    actions.append(edit,del);
-    row.append(name,actions);
-    list.append(row);
-  });
+function setView(name){
+  const views=['overview','projects','media','settings'];
+  for(const view of views) $('view-'+view).hidden=view!==name;
+  $('editor-view').hidden=name!=='editor';
+  document.querySelectorAll('[data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===name));
+  const titles={overview:'Visão geral',projects:'Projetos',media:'Biblioteca de mídia',settings:'Configurações',editor:'Editor de projeto'};
+  $('page-title').textContent=titles[name]||'Painel';
+  if(name==='media') renderMedia();
+}
+document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.view)));
+$('overview-all-projects').addEventListener('click',()=>setView('projects'));
+$('top-new-project').addEventListener('click',()=>openEditor());
+$('new-project').addEventListener('click',()=>openEditor());
+$('back-projects').addEventListener('click',()=>setView('projects'));
+$('clear-form').addEventListener('click',()=>{if(confirm('Descartar as alterações deste formulário?'))setView('projects');});
+$('project-search').addEventListener('input',renderProjects);
+$('project-filter').addEventListener('change',renderProjects);
+$('refresh-media').addEventListener('click',loadMedia);
+document.querySelectorAll('[data-media-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+  mediaFilter=btn.dataset.mediaFilter;
+  document.querySelectorAll('[data-media-filter]').forEach(b=>b.classList.toggle('active',b===btn));
+  renderMedia();
+}));
+
+async function loadGames(){
+  $('projects-list').innerHTML='<div class="empty-state">Carregando projetos...</div>';
+  const {data,error}=await supabase.from('games').select('*').order('sort_order',{ascending:true});
+  if(error){$('projects-list').innerHTML='<div class="empty-state">Não foi possível carregar os projetos: '+escapeHtml(error.message)+'</div>';return;}
+  games=data||[];
+  renderProjects();
+  renderOverview();
+}
+function renderOverview(){
+  $('stat-total').textContent=games.length;
+  $('stat-published').textContent=games.filter(g=>g.published).length;
+  $('stat-development').textContent=games.filter(g=>g.status==='desenvolvimento').length;
+  $('stat-media').textContent=mediaItems.length;
+  const recent=[...games].sort((a,b)=>new Date(b.updated_at||b.created_at||0)-new Date(a.updated_at||a.created_at||0)).slice(0,5);
+  $('overview-recent').innerHTML=recent.length?recent.map(g=>`<div class="recent-row"><span><strong>${escapeHtml(g.title)}</strong><br><small class="muted">${escapeHtml(g.category||'Sem categoria')}</small></span><span class="status-pill ${g.published?'live':'draft'}">${g.published?'Publicado':'Rascunho'}</span></div>`).join(''):'<p class="muted">Nenhum projeto cadastrado ainda.</p>';
+}
+function renderProjects(){
+  const q=$('project-search').value.trim().toLowerCase();
+  const filter=$('project-filter').value;
+  const list=games.filter(g=>(filter==='all'||(filter==='published'?g.published:!g.published))&&`${g.title} ${g.category||''} ${g.short_description||''}`.toLowerCase().includes(q));
+  $('projects-list').innerHTML=list.length?list.map(g=>{
+    const src=g.catalog_image_url||g.cover_url||'';
+    return `<article class="project-card"><div class="project-thumb">${src?`<img src="${escapeAttr(src)}" alt="">`:`<div class="thumb-empty">${escapeHtml((g.initials||g.title?.slice(0,2)||'ET').toUpperCase())}</div>`}</div><div class="project-content"><div><span class="status-pill ${g.published?'live':'draft'}">${g.published?'Publicado':'Rascunho'}</span><h3>${escapeHtml(g.title)}</h3><p>${escapeHtml(g.category||'Sem categoria')}</p></div><div class="project-actions"><button class="small-btn" data-edit="${escapeAttr(g.id)}">Editar projeto</button><button class="small-btn" data-delete="${escapeAttr(g.id)}">Excluir</button></div></div></article>`;
+  }).join(''):'<div class="empty-state" style="grid-column:1/-1">Nenhum projeto encontrado. Tente outra busca ou adicione um projeto.</div>';
+  $('projects-list').querySelectorAll('[data-edit]').forEach(btn=>btn.addEventListener('click',()=>openEditor(games.find(g=>g.id===btn.dataset.edit))));
+  $('projects-list').querySelectorAll('[data-delete]').forEach(btn=>btn.addEventListener('click',()=>deleteGame(btn.dataset.delete)));
+}
+async function deleteGame(id){
+  const game=games.find(g=>g.id===id);
+  if(!game||!confirm(`Excluir definitivamente "${game.title}"? Essa ação não pode ser desfeita.`))return;
+  const {error}=await supabase.from('games').delete().eq('id',id);
+  if(error){alert('Não foi possível excluir: '+error.message);return;}
+  await loadGames();
 }
 
-function fillForm(g) {
-  $('form-heading').textContent = 'Editar jogo';
-  for (const k of ['id','title','slug','category','short_description','description','cover_url','status','action_label','action_url','body_html']) {
-    $(k === 'id' ? 'game-id' : k).value = g[k] ?? '';
-  }
-  $('home_image_url').value = g.home_image_url || '';
-  $('home_fit').value = g.home_fit || g.cover_fit || 'cover';
-  $('home_x').value = g.home_position_x ?? g.cover_position_x ?? 50;
-  $('home_y').value = g.home_position_y ?? g.cover_position_y ?? 50;
-  $('catalog_image_url').value = g.catalog_image_url || '';
-  $('catalog_fit').value = g.catalog_fit || g.cover_fit || 'cover';
-  $('catalog_x').value = g.catalog_position_x ?? g.cover_position_x ?? 50;
-  $('catalog_y').value = g.catalog_position_y ?? g.cover_position_y ?? 50;
-  $('detail_image_url').value = g.detail_image_url || '';
-  $('detail_fit').value = g.detail_fit || g.cover_fit || 'cover';
-  $('detail_x').value = g.detail_position_x ?? g.cover_position_x ?? 50;
-  $('detail_y').value = g.detail_position_y ?? g.cover_position_y ?? 50;
-  updateAllPreviews();
-  $('featured').checked = !!g.featured;
-  $('published').checked = !!g.published;
-  updateCoverPreview();
-  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-}
-
-$('clear-form').onclick = () => {
+function openEditor(game=null){
+  editingId=game?.id||'';
   $('game-form').reset();
-  $('game-id').value = '';
-  $('form-heading').textContent = 'Adicionar jogo';
-  updateCoverPreview();
-};
-
-$('game-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const id = $('game-id').value;
-  const payload = {
-    title:$('title').value.trim(),
-    slug:$('slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'-'),
-    category:$('category').value,
-    short_description:$('short_description').value,
-    description:$('description').value,
-    cover_url:$('cover_url').value || null,
-    home_image_url:$('home_image_url').value || null,
-    home_fit:$('home_fit').value,
-    home_position_x:Number($('home_x').value),
-    home_position_y:Number($('home_y').value),
-    catalog_image_url:$('catalog_image_url').value || null,
-    catalog_fit:$('catalog_fit').value,
-    catalog_position_x:Number($('catalog_x').value),
-    catalog_position_y:Number($('catalog_y').value),
-    detail_image_url:$('detail_image_url').value || null,
-    detail_fit:$('detail_fit').value,
-    detail_position_x:Number($('detail_x').value),
-    detail_position_y:Number($('detail_y').value),
-    status:$('status').value,
-    status_label:$('status').selectedOptions[0].text.toUpperCase(),
-    action_label:$('action_label').value,
-    action_url:$('action_url').value || null,
-    body_html:$('body_html').value,
-    featured:$('featured').checked,
-    published:$('published').checked,
-    updated_at:new Date().toISOString()
-  };
-  const result = id
-    ? await supabase.from('games').update(payload).eq('id',id)
-    : await supabase.from('games').insert({...payload,sort_order:100});
-  if (result.error) {
-    alert(result.error.message);
-    return;
+  $('game-id').value=game?.id||'';
+  $('form-heading').textContent=game?'Editar projeto':'Novo projeto';
+  $('editor-mode').textContent=game?'EDITANDO PROJETO':'NOVO PROJETO';
+  $('editor-mode').className='status-pill '+(game?'live':'draft');
+  for(const key of ['title','slug','category','short_description','description','cover_url','status','action_label','action_url','body_html']){
+    const el=$(key);el.value=game?.[key]??(key==='status'?'desenvolvimento':'');
   }
-  alert('Jogo salvo. A capa será atualizada no catálogo e na página do projeto.');
-  $('clear-form').click();
-  await loadGames();
-  await loadMedia();
+  $('home_image_url').value=game?.home_image_url||'';
+  $('home_fit').value=game?.home_fit||game?.cover_fit||'cover';
+  $('home_x').value=game?.home_position_x??game?.cover_position_x??50;
+  $('home_y').value=game?.home_position_y??game?.cover_position_y??50;
+  $('catalog_image_url').value=game?.catalog_image_url||'';
+  $('catalog_fit').value=game?.catalog_fit||game?.cover_fit||'cover';
+  $('catalog_x').value=game?.catalog_position_x??game?.cover_position_x??50;
+  $('catalog_y').value=game?.catalog_position_y??game?.cover_position_y??50;
+  $('detail_image_url').value=game?.detail_image_url||'';
+  $('detail_fit').value=game?.detail_fit||game?.cover_fit||'cover';
+  $('detail_x').value=game?.detail_position_x??game?.cover_position_x??50;
+  $('detail_y').value=game?.detail_position_y??game?.cover_position_y??50;
+  $('featured').checked=!!game?.featured;
+  $('published').checked=game?!!game.published:true;
+  slugEdited=!!game;
+  if(selectedPreviewUrl){URL.revokeObjectURL(selectedPreviewUrl);selectedPreviewUrl=null;}
+  $('cover-file').value='';
+  $('save-status').textContent='As alterações ainda não foram salvas.';
+  updateAllPreviews();
+  setView('editor');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+$('title').addEventListener('input',()=>{
+  if(!slugEdited)$('slug').value=slugify($('title').value);
+});
+$('slug').addEventListener('input',()=>{slugEdited=true;});
+$('game-form').addEventListener('input',e=>{
+  if(e.target.id!=='cover-file')$('save-status').textContent='Alterações pendentes de salvamento.';
 });
 
-const imageAreas = [
-  {key:'home',url:'home_image_url',fit:'home_fit',x:'home_x',y:'home_y',preview:'home_preview'},
-  {key:'catalog',url:'catalog_image_url',fit:'catalog_fit',x:'catalog_x',y:'catalog_y',preview:'catalog_preview'},
-  {key:'detail',url:'detail_image_url',fit:'detail_fit',x:'detail_x',y:'detail_y',preview:'detail_preview'}
-];
-function updateAreaPreview(area) {
+function updateAreaPreview(area){
   const img=$(area.preview);
-  const customSource=$(area.url).value.trim();
-  const defaultSource=$('cover_url').value.trim();
-  const isSelectedFileForArea = (area.key==='detail' && $('media-kind').value==='banners') || (area.key!=='detail' && $('media-kind').value==='covers');
-  // A imagem recém-selecionada deve aparecer na prévia antes do upload.
-  // Uma URL específica da área continua tendo prioridade sobre a imagem padrão.
-  const source = customSource || (isSelectedFileForArea ? selectedPreviewUrl : null) || defaultSource;
+  const custom=$(area.url).value.trim();
+  const isLocal=(area.key==='detail'&&$('media-kind').value==='banners')||(area.key!=='detail'&&$('media-kind').value==='covers');
+  const src=custom||(isLocal?selectedPreviewUrl:null)||$('cover_url').value.trim();
   img.style.objectFit=$(area.fit).value;
-  img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
+  img.style.objectPosition=$(`${area.key}_x`).value+'% '+$ (`${area.key}_y`).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
   $(area.y+'_value').textContent=$(area.y).value+'%';
-  if(source){img.src=source;img.hidden=false;}else{img.removeAttribute('src');img.hidden=true;}
+  const empty=$(area.frame).querySelector('.preview-empty');
+  if(src){img.hidden=false;empty.hidden=true;if(img.src!==src)img.src=src;}
+  else{img.hidden=true;img.removeAttribute('src');empty.hidden=false;}
 }
 function updateAllPreviews(){imageAreas.forEach(updateAreaPreview);}
 for(const area of imageAreas){
   [area.url,area.fit,area.x,area.y].forEach(id=>$(id).addEventListener('input',()=>updateAreaPreview(area)));
   $(area.fit).addEventListener('change',()=>updateAreaPreview(area));
-}
-function updateCoverPreview(){updateAllPreviews();}
-$('cover_url').addEventListener('input',updateAllPreviews);
-$('cover-file').addEventListener('change',() => {
-  const file = $('cover-file').files[0];
-  if (selectedPreviewUrl) URL.revokeObjectURL(selectedPreviewUrl);
-  selectedPreviewUrl = null;
-  if (!file) { updateAllPreviews(); return; }
-  try {
-    validateImage(file);
-    selectedPreviewUrl = URL.createObjectURL(file);
-    updateAllPreviews();
-  } catch (err) {
-    alert(err.message);
-    $('cover-file').value='';
-    updateAllPreviews();
+  const frame=$(area.frame);
+  let dragging=false;
+  frame.addEventListener('pointerdown',e=>{
+    const img=$(area.preview);if(img.hidden)return;
+    dragging=true;frame.setPointerCapture(e.pointerId);moveImage(e);
+  });
+  frame.addEventListener('pointermove',e=>{if(dragging)moveImage(e);});
+  frame.addEventListener('pointerup',()=>dragging=false);
+  frame.addEventListener('pointercancel',()=>dragging=false);
+  function moveImage(e){
+    const rect=frame.getBoundingClientRect();
+    const x=Math.max(0,Math.min(100,Math.round((e.clientX-rect.left)/rect.width*100)));
+    const y=Math.max(0,Math.min(100,Math.round((e.clientY-rect.top)/rect.height*100)));
+    $(area.x).value=x;$(area.y).value=y;updateAreaPreview(area);
   }
-});
+}
+$('cover_url').addEventListener('input',updateAllPreviews);
 $('media-kind').addEventListener('change',updateAllPreviews);
 
-function validateImage(file) {
-  if (!file) throw new Error('Escolha uma imagem primeiro.');
-  if (file.size > MAX_IMAGE_SIZE) throw new Error('A imagem ultrapassa o limite de 5 MB.');
-  if (!TYPES.includes(file.type)) throw new Error('Formato não permitido. Use JPG, PNG, WebP ou GIF.');
-}
+$('cover-file').addEventListener('change',()=>{
+  const file=$('cover-file').files[0];
+  if(selectedPreviewUrl){URL.revokeObjectURL(selectedPreviewUrl);selectedPreviewUrl=null;}
+  if(!file){updateAllPreviews();return;}
+  try{validateImage(file);selectedPreviewUrl=URL.createObjectURL(file);updateAllPreviews();$('upload-status').textContent='Prévia carregada. Envie para guardar na biblioteca.';}
+  catch(err){alert(err.message);$('cover-file').value='';$('upload-status').textContent=err.message;}
+});
+const drop=$('upload-drop');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dragover');});
+drop.addEventListener('dragleave',()=>drop.classList.remove('dragover'));
+drop.addEventListener('drop',e=>{
+  e.preventDefault();drop.classList.remove('dragover');
+  const file=e.dataTransfer.files?.[0];if(!file)return;
+  const dt=new DataTransfer();dt.items.add(file);$('cover-file').files=dt.files;$('cover-file').dispatchEvent(new Event('change'));
+});
 
-function safeSlug(value) {
-  return (value || 'projeto').trim().toLowerCase().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-');
+function validateImage(file){
+  if(!file)throw new Error('Escolha uma imagem primeiro.');
+  if(!TYPES.includes(file.type))throw new Error('Formato não permitido. Use JPG, PNG, WebP ou GIF.');
+  if(file.size>MAX_IMAGE_SIZE)throw new Error('A imagem ultrapassa o limite de 5 MB.');
 }
+function slugify(value){return (value||'projeto').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-');}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(v){return escapeHtml(v).replace(/\`/g,'&#96;');}
 
-async function uploadImage(file, path, replace = false) {
-  validateImage(file);
-  const {error} = await supabase.storage.from('game-media').upload(path,file,{
-    cacheControl:'3600',
-    upsert:replace,
-    contentType:file.type
-  });
-  if (error) throw error;
-  const {data} = supabase.storage.from('game-media').getPublicUrl(path);
-  return data.publicUrl;
+$('game-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=$('save-game');btn.disabled=true;btn.textContent='Salvando...';
+  const slug=slugify($('slug').value);
+  const fullPayload={
+    title:$('title').value.trim(),slug,category:$('category').value.trim(),
+    short_description:$('short_description').value,description:$('description').value,
+    cover_url:$('cover_url').value.trim()||null,
+    home_image_url:$('home_image_url').value.trim()||null,home_fit:$('home_fit').value,home_position_x:Number($('home_x').value),home_position_y:Number($('home_y').value),
+    catalog_image_url:$('catalog_image_url').value.trim()||null,catalog_fit:$('catalog_fit').value,catalog_position_x:Number($('catalog_x').value),catalog_position_y:Number($('catalog_y').value),
+    detail_image_url:$('detail_image_url').value.trim()||null,detail_fit:$('detail_fit').value,detail_position_x:Number($('detail_x').value),detail_position_y:Number($('detail_y').value),
+    status:$('status').value,status_label:$('status').selectedOptions[0].text.toUpperCase(),
+    action_label:$('action_label').value,action_url:$('action_url').value.trim()||null,body_html:$('body_html').value,
+    featured:$('featured').checked,published:$('published').checked,updated_at:new Date().toISOString()
+  };
+  try{
+    let result=await saveGame(fullPayload);
+    let partial=false;
+    if(result.error&&isMissingImageColumns(result.error)){
+      partial=true;
+      const fallback={...fullPayload};
+      for(const key of ['home_image_url','home_fit','home_position_x','home_position_y','catalog_image_url','catalog_fit','catalog_position_x','catalog_position_y','detail_image_url','detail_fit','detail_position_x','detail_position_y'])delete fallback[key];
+      result=await saveGame(fallback);
+    }
+    if(result.error)throw result.error;
+    alert(partial?'Projeto salvo. As imagens e enquadramentos individuais ainda não foram gravados porque falta aplicar a migração SQL de imagens independentes no Supabase.':'Projeto salvo com sucesso!');
+    await loadGames();setView('projects');
+  }catch(err){alert('Não foi possível salvar o projeto: '+(err.message||String(err)));}
+  finally{btn.disabled=false;btn.textContent='Salvar projeto';}
+});
+async function saveGame(payload){
+  const id=$('game-id').value;
+  return id?await supabase.from('games').update(payload).eq('id',id):await supabase.from('games').insert({...payload,sort_order:100});
 }
+function isMissingImageColumns(error){return /column .* does not exist|could not find .* column|schema cache|PGRST204|42703/i.test(error.message||'');}
 
-$('upload-cover').addEventListener('click',async () => {
-  const file = $('cover-file').files[0];
-  const folder = $('media-kind').value;
-  try {
+async function uploadSelectedImage(){
+  const file=$('cover-file').files[0];const folder=$('media-kind').value;
+  const status=$('upload-status');const btn=$('upload-cover');
+  try{
     validateImage(file);
-    const slug = safeSlug($('slug').value || $('title').value);
-    const path = `${folder}/${slug}-${Date.now()}.${EXT[file.type]}`;
-    const btn = $('upload-cover');
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-    const publicUrl = await uploadImage(file,path);
-    if (folder === 'covers') {
-      $('cover_url').value = publicUrl;
-      updateAllPreviews();
-      alert('Imagem enviada como capa padrão. Se quiser, ajuste as imagens específicas de cada área antes de salvar.');
-    } else {
-      $('detail_image_url').value = publicUrl;
-      updateAreaPreview(imageAreas[2]);
-      alert('Banner aplicado à página do jogo. Clique em “Salvar jogo” para publicar.');
-    }
-    $('cover-file').value = '';
-    if (selectedPreviewUrl) URL.revokeObjectURL(selectedPreviewUrl);
-    selectedPreviewUrl = null;
-    updateAllPreviews();
+    if(!editingId&&!$('title').value.trim())throw new Error('Dê um nome ao projeto antes de enviar a imagem.');
+    btn.disabled=true;btn.textContent='Enviando...';status.textContent='Enviando imagem para o Supabase...';
+    const path=`${folder}/${slugify($('slug').value||$('title').value)}-${Date.now()}.${EXT[file.type]}`;
+    const {error}=await supabase.storage.from('game-media').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+    if(error)throw error;
+    const {data}=supabase.storage.from('game-media').getPublicUrl(path);
+    if(folder==='covers')$('cover_url').value=data.publicUrl;
+    else $('detail_image_url').value=data.publicUrl;
+    if(selectedPreviewUrl){URL.revokeObjectURL(selectedPreviewUrl);selectedPreviewUrl=null;}
+    $('cover-file').value='';updateAllPreviews();
+    status.textContent='Imagem enviada e aplicada. Salve o projeto para publicar a alteração.';
     await loadMedia();
-    btn.disabled = false;
-    btn.textContent = 'Enviar imagem';
-  } catch (err) {
-    console.error('Falha no upload de imagem:',err);
-    alert('O Supabase recusou o envio da imagem. Detalhe: ' + (err.message || err.error_description || String(err)));
-    $('upload-cover').disabled = false;
-    $('upload-cover').textContent = 'Enviar imagem';
-  }
-});
+  }catch(err){
+    console.error(err);status.textContent='Falha no envio: '+(err.message||String(err));
+    alert('Não foi possível enviar a imagem. '+(err.message||String(err)));
+  }finally{btn.disabled=false;btn.textContent='Enviar imagem';}
+}
+$('upload-cover').addEventListener('click',uploadSelectedImage);
 
-async function loadMedia() {
-  const area = $('media-list');
-  if (!area || !supabaseReady || !currentUser) return;
-  area.innerHTML = 'Carregando biblioteca...';
-  const folders = ['covers','banners'];
-  const results = await Promise.all(folders.map(folder =>
-    supabase.storage.from('game-media').list(folder,{limit:100,sortBy:{column:'created_at',order:'desc'}})
-      .then(result => ({folder,...result}))
-  ));
-  area.innerHTML = '';
-  const failed = results.find(result => result.error);
-  if (failed) {
-    area.textContent = 'Não foi possível listar a biblioteca: ' + failed.error.message;
-    return;
-  }
-  let count = 0;
-  for (const result of results) {
-    for (const file of (result.data || [])) {
-      if (!file.name || file.name === '.emptyFolderPlaceholder') continue;
-      count++;
-      const path = result.folder + '/' + file.name;
-      const {data:urlData} = supabase.storage.from('game-media').getPublicUrl(path);
-      const item = document.createElement('div');
-      item.className = 'media-item';
-      const img = document.createElement('img');
-      img.src = urlData.publicUrl;
-      img.alt = file.name;
-      const name = document.createElement('span');
-      name.textContent = (result.folder === 'covers' ? 'CAPA · ' : 'BANNER · ') + file.name;
-      const makeApplyButton = (label, target) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = label;
-        button.onclick = () => {
-          if (target === 'cover_url') {
-            $(target).value = urlData.publicUrl;
-            updateAllPreviews();
-          } else {
-            $(target).value = urlData.publicUrl;
-            const area = imageAreas.find(item => item.url === target);
-            if (area) updateAreaPreview(area);
-          }
-          window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-          alert('Imagem aplicada. Clique em “Salvar jogo” para publicar.');
-        };
-        return button;
-      };
-      const useDefault = makeApplyButton('Usar como padrão', 'cover_url');
-      const useHome = makeApplyButton('Usar na página inicial', 'home_image_url');
-      const useCatalog = makeApplyButton('Usar na loja', 'catalog_image_url');
-      const useDetail = makeApplyButton('Usar na página do jogo', 'detail_image_url');
-      const replaceInput = document.createElement('input');
-      replaceInput.type = 'file';
-      replaceInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
-      replaceInput.hidden = true;
-      const replace = document.createElement('button');
-      replace.type = 'button';
-      replace.textContent = 'Substituir arquivo';
-      replace.onclick = () => replaceInput.click();
-      replaceInput.onchange = async () => {
-        const replacement = replaceInput.files[0];
-        if (!replacement) return;
-        try {
-          validateImage(replacement);
-          if (!confirm('Substituir esta imagem mantendo o mesmo endereço? As páginas que usam essa URL passarão a exibir o novo arquivo.')) return;
-          replace.disabled = true;
-          await uploadImage(replacement,path,true);
-          alert('Imagem substituída com sucesso.');
-          await loadMedia();
-        } catch (err) {
-          alert('Não foi possível substituir a imagem: ' + err.message);
-        } finally {
-          replace.disabled = false;
-          replaceInput.value = '';
-        }
-      };
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.textContent = 'Excluir imagem';
-      remove.onclick = async () => {
-        if (!confirm('Excluir esta imagem do Storage?')) return;
-        try {
-          const {data:games,error:gamesError} = await supabase.from('games').select('title,cover_url,home_image_url,catalog_image_url,detail_image_url');
-          if (gamesError) throw gamesError;
-          const inUse = (games || []).filter(game => [game.cover_url,game.home_image_url,game.catalog_image_url,game.detail_image_url].includes(urlData.publicUrl));
-          if (inUse.length) {
-            alert('Esta imagem está sendo usada por: ' + inUse.map(game => game.title).join(', ') + '. Troque a capa desses jogos antes de excluir.');
-            return;
-          }
-          const {error} = await supabase.storage.from('game-media').remove([path]);
-          if (error) throw error;
-          await loadMedia();
-        } catch (err) {
-          alert('Não foi possível excluir a imagem: ' + err.message);
-        }
-      };
-      item.append(img,name,useDefault,useHome,useCatalog,useDetail,replace,replaceInput,remove);
-      area.append(item);
+async function loadMedia(){
+  $('media-list').innerHTML='<div class="empty-state">Carregando biblioteca...</div>';
+  const folders=['covers','banners'];
+  const results=await Promise.all(folders.map(folder=>supabase.storage.from('game-media').list(folder,{limit:100,sortBy:{column:'created_at',order:'desc'}}).then(r=>({folder,...r}))));
+  const failed=results.find(r=>r.error);
+  if(failed){$('media-list').innerHTML='<div class="empty-state">Não foi possível abrir a biblioteca: '+escapeHtml(failed.error.message)+'</div>';return;}
+  mediaItems=[];
+  for(const result of results){
+    for(const file of result.data||[]){
+      if(!file.name||file.name==='.emptyFolderPlaceholder')continue;
+      const path=result.folder+'/'+file.name;
+      const {data}=supabase.storage.from('game-media').getPublicUrl(path);
+      mediaItems.push({folder:result.folder,name:file.name,path,url:data.publicUrl,created:file.created_at});
     }
   }
-  if (!count) area.textContent = 'Nenhuma imagem enviada ainda.';
+  $('stat-media').textContent=mediaItems.length;
+  renderMedia();
+}
+function renderMedia(){
+  const items=mediaItems.filter(item=>mediaFilter==='all'||item.folder===mediaFilter);
+  $('media-list').innerHTML=items.length?items.map((item,index)=>`<article class="media-item"><img src="${escapeAttr(item.url)}" alt="${escapeAttr(item.name)}" loading="lazy"><strong>${escapeHtml(item.name)}</strong><small>${item.folder==='covers'?'CAPA':'BANNER'}</small><div class="media-apply"><button data-apply="${index}" data-target="cover_url">Padrão</button><button data-apply="${index}" data-target="home_image_url">Início</button><button data-apply="${index}" data-target="catalog_image_url">Loja</button><button data-apply="${index}" data-target="detail_image_url">Página</button></div><div class="media-apply"><button data-copy="${index}">Copiar URL</button><button data-remove="${index}">Excluir</button></div></article>`).join(''):'<div class="empty-state" style="grid-column:1/-1">Nenhuma imagem nesta categoria. Envie imagens pelo editor de um projeto.</div>';
+  $('media-list').querySelectorAll('[data-apply]').forEach(btn=>btn.addEventListener('click',()=>{
+    const item=items[Number(btn.dataset.apply)];
+    if(!editingId){alert('Para aplicar uma imagem, abra primeiro um projeto em Projetos → Editar. Depois volte à Biblioteca de mídia.');setView('projects');return;}
+    $(btn.dataset.target).value=item.url;
+    updateAllPreviews();
+    $('save-status').textContent='Imagem aplicada. Salve o projeto para confirmar.';
+    setView('editor');
+  }));
+  $('media-list').querySelectorAll('[data-copy]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const item=items[Number(btn.dataset.copy)];
+    try{await navigator.clipboard.writeText(item.url);alert('URL copiada.');}catch{prompt('Copie a URL da imagem:',item.url);}
+  }));
+  $('media-list').querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>removeMedia(items[Number(btn.dataset.remove)])));
+}
+async function removeMedia(item){
+  if(!confirm('Excluir este arquivo da biblioteca? Se algum projeto usa a URL, a imagem deixará de aparecer nele.'))return;
+  const {error}=await supabase.storage.from('game-media').remove([item.path]);
+  if(error){alert('Não foi possível excluir: '+error.message);return;}
+  await loadMedia();
 }
 
-document.querySelectorAll('[data-tab]').forEach(button => {
-  button.addEventListener('click',() => {
-    document.querySelectorAll('[data-tab]').forEach(item => item.classList.remove('active'));
-    button.classList.add('active');
-    if (button.dataset.tab === 'settings') {
-      $('editor').innerHTML = '<h2>Configurações gerais</h2><p>Editor de banners do site, rodapé, redes sociais e navegação poderá ser adicionado em uma próxima etapa. O gerenciamento de capas, banners de projeto e biblioteca de mídia fica na aba Loja / Jogos.</p>';
-    }
-  });
-});
