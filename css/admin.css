@@ -25,5 +25,5 @@
 .frame-shortcuts button{border:1px solid var(--line);border-radius:6px;background:#ffffff07;color:#cbd0cb;padding:7px 4px;font-size:9px}
 .frame-shortcuts button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 .image-area .status-pill{font-size:8px;padding:4px 7px}
-@media(max-width:1250px){.image-areas-grid{grid-template-columns:1fr}}
+@media(max-width:1050px){.image-areas-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.image-areas-grid{grid-template-columns:1fr}.image-preview{aspect-ratio:16/9;min-height:0}}
