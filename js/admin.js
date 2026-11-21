@@ -178,25 +178,9 @@ function updateCoverPreview(){updateAllPreviews();}
 $('cover_url').addEventListener('input',updateAllPreviews);
 $('cover-file').addEventListener('change',() => {
   const file = $('cover-file').files[0];
-  const img = $('cover-preview');
-  if (!file) {
-    updateCoverPreview();
-    return;
-  }
-  if (!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)) {
-    alert('Formato não permitido. Use JPG, PNG, WebP ou GIF.');
-    $('cover-file').value = '';
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    alert('A imagem ultrapassa o limite de 5 MB.');
-    $('cover-file').value = '';
-    return;
-  }
-  if (img.dataset.objectUrl) URL.revokeObjectURL(img.dataset.objectUrl);
-  const objectUrl = URL.createObjectURL(file);
-  img.dataset.objectUrl = objectUrl;
-  showPreview(objectUrl);
+  if (!file) return;
+  try { validateImage(file); }
+  catch (err) { alert(err.message); $('cover-file').value=''; }
 });
 
 function validateImage(file) {
@@ -327,9 +311,9 @@ async function loadMedia() {
       remove.onclick = async () => {
         if (!confirm('Excluir esta imagem do Storage?')) return;
         try {
-          const {data:games,error:gamesError} = await supabase.from('games').select('title,cover_url');
+          const {data:games,error:gamesError} = await supabase.from('games').select('title,cover_url,home_image_url,catalog_image_url,detail_image_url');
           if (gamesError) throw gamesError;
-          const inUse = (games || []).filter(game => game.cover_url === urlData.publicUrl);
+          const inUse = (games || []).filter(game => [game.cover_url,game.home_image_url,game.catalog_image_url,game.detail_image_url].includes(urlData.publicUrl));
           if (inUse.length) {
             alert('Esta imagem está sendo usada por: ' + inUse.map(game => game.title).join(', ') + '. Troque a capa desses jogos antes de excluir.');
             return;
