@@ -85,6 +85,10 @@ function fillForm(g) {
   for (const k of ['id','title','slug','category','short_description','description','cover_url','status','action_label','action_url','body_html']) {
     $(k === 'id' ? 'game-id' : k).value = g[k] ?? '';
   }
+  $('cover-fit').value = g.cover_fit || 'cover';
+  $('cover-position-x').value = g.cover_position_x ?? 50;
+  $('cover-position-y').value = g.cover_position_y ?? 50;
+  updateFramingLabels();
   $('featured').checked = !!g.featured;
   $('published').checked = !!g.published;
   updateCoverPreview();
@@ -108,6 +112,9 @@ $('game-form').addEventListener('submit', async e => {
     short_description:$('short_description').value,
     description:$('description').value,
     cover_url:$('cover_url').value || null,
+    cover_fit:$('cover-fit').value,
+    cover_position_x:Number($('cover-position-x').value),
+    cover_position_y:Number($('cover-position-y').value),
     status:$('status').value,
     status_label:$('status').selectedOptions[0].text.toUpperCase(),
     action_label:$('action_label').value,
@@ -130,8 +137,25 @@ $('game-form').addEventListener('submit', async e => {
   await loadMedia();
 });
 
+function updateFramingLabels() {
+  $('cover-position-x-value').textContent = $('cover-position-x').value + '%';
+  $('cover-position-y-value').textContent = $('cover-position-y').value + '%';
+}
+
+function applyPreviewFraming() {
+  const img = $('cover-preview');
+  img.style.objectFit = $('cover-fit').value;
+  img.style.objectPosition = $('cover-position-x').value + '% ' + $('cover-position-y').value + '%';
+  updateFramingLabels();
+}
+
+$('cover-fit').addEventListener('change',applyPreviewFraming);
+$('cover-position-x').addEventListener('input',applyPreviewFraming);
+$('cover-position-y').addEventListener('input',applyPreviewFraming);
+
 function showPreview(src) {
   const img = $('cover-preview');
+  applyPreviewFraming();
   img.onload = () => {
     img.hidden = false;
     img.style.display = 'block';
