@@ -57,7 +57,7 @@ function setView(name){
   const views=['overview','projects','media','settings'];
   for(const view of views) $('view-'+view).hidden=view!==name;
   $('editor-view').hidden=name!=='editor';
-  document.querySelectorAll('[data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===name));
+  document.querySelectorAll('[data-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.view===(name==='editor'?'projects':name)));
   const titles={overview:'Visão geral',projects:'Projetos',media:'Biblioteca de mídia',settings:'Configurações',editor:'Editor de projeto'};
   $('page-title').textContent=titles[name]||'Painel';
   if(name==='media') renderMedia();
@@ -157,9 +157,9 @@ function updateAreaPreview(area){
   const img=$(area.preview);
   const custom=$(area.url).value.trim();
   const isLocal=(area.key==='detail'&&$('media-kind').value==='banners')||(area.key!=='detail'&&$('media-kind').value==='covers');
-  const src=custom||(isLocal?selectedPreviewUrl:null)||$('cover_url').value.trim();
+  const src=(isLocal&&area.key==='detail'&&selectedPreviewUrl)?selectedPreviewUrl:(custom||(isLocal?selectedPreviewUrl:null)||$('cover_url').value.trim());
   img.style.objectFit=$(area.fit).value;
-  img.style.objectPosition=$(`${area.key}_x`).value+'% '+$ (`${area.key}_y`).value+'%';
+  img.style.objectPosition=$(area.x).value+'% '+$(area.y).value+'%';
   $(area.x+'_value').textContent=$(area.x).value+'%';
   $(area.y+'_value').textContent=$(area.y).value+'%';
   const empty=$(area.frame).querySelector('.preview-empty');
