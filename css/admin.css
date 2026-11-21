@@ -27,3 +27,5 @@
 .image-area .status-pill{font-size:8px;padding:4px 7px}
 @media(max-width:1050px){.image-areas-grid{grid-template-columns:1fr}}
 @media(max-width:760px){.image-areas-grid{grid-template-columns:1fr}.image-preview{aspect-ratio:16/9;min-height:0}}
+
+.zoom-control{grid-column:1/-1;padding:8px 10px 5px;border:1px solid #343a3e;border-radius:8px;background:#0d1012}.zoom-control .range-row{margin-bottom:3px}.zoom-control input[type=range]{width:100%;accent-color:var(--accent)}.image-preview img{transition:transform .08s ease-out;transform-origin:center center}
