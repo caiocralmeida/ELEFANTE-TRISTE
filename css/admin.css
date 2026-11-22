@@ -34,3 +34,7 @@
 /* A prévia usa a mesma proporção das imagens no site público. */
 .image-preview{height:auto!important;aspect-ratio:16/9;width:100%;}
 .image-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;transform-origin:center center;}
+
+/* Símbolo de elefante na identidade visual do painel. */
+.brand-mark{overflow:hidden;}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:4px;transform:rotate(6deg);}
