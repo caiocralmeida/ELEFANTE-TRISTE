@@ -19,3 +19,14 @@
 .coming-art{height:auto!important;aspect-ratio:16/9;}
 .public-frame-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;transform-origin:center center;}
 @media(max-width:520px){.feature-image,.catalog-art,.game-cover,.coming-art{height:auto!important;aspect-ratio:16/9;}}
+
+/* Símbolo oficial do estúdio: elefante no lugar das antigas letras ET. */
+.brand-mark{overflow:hidden;transform:rotate(-6deg);}
+.brand-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:4px;transform:rotate(6deg);}
+.elephant-symbol{display:grid;place-items:center;letter-spacing:0;}
+.elephant-emblem{display:block;width:min(240px,62%);height:auto;filter:drop-shadow(0 0 35px #d6f36a35);}
+.elephant-symbol>span{font-size:30px;position:absolute;right:18%;top:18%;}
+.about-symbol{font-size:0;}
+.about-symbol .elephant-emblem{width:min(220px,65%);}
+.about-symbol>span{position:absolute;right:24%;top:22%;font-size:24px;}
+.game-elephant{width:min(190px,48%);height:auto;filter:drop-shadow(0 0 35px #d6f36a35);}
