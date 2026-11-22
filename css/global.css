@@ -100,3 +100,11 @@ h1 em,h2 em,.section-heading h2 span,.support h2 span{color:#77716a}
 .contact-grid{background:none}
 .pix-placeholder{border-color:#aaa49a;color:#333}
 @media(max-width:800px){.main-nav{background:#e9e6df;border-bottom-color:#cbc6bc}}
+
+
+/* Integra a logo escura ao fundo marfim, eliminando o retângulo preto. */
+.elephant-emblem,.game-elephant{mix-blend-mode:screen;}
+.brand-mark img{mix-blend-mode:screen;}
+@media(prefers-reduced-transparency:reduce){
+ .elephant-emblem,.game-elephant,.brand-mark img{mix-blend-mode:normal;}
+}
