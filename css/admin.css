@@ -38,3 +38,5 @@
 /* Símbolo de elefante na identidade visual do painel. */
 .brand-mark{overflow:hidden;}
 .brand-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:4px;transform:rotate(6deg);}
+
+.brand-mark img{object-fit:contain;width:100%;height:100%;padding:2px;transform:none;}
