@@ -31,7 +31,7 @@ function render(){
  const list=games.filter(game=>(filter==='todos'||game.status===filter)&&`${game.title} ${game.category||''} ${game.short_description||''}`.toLocaleLowerCase('pt-BR').includes(query));
  grid.innerHTML=list.map((game,index)=>{
   const artClass=game.slug==='gridlife'?'art-gridlife':'art-shift';
-  const artWord=game.slug==='gridlife'?'GRID<span>LIFE</span>':`SHIFT’S<br><span>OVER</span>`;
+  const artWord=safe(game.title);
   const status=safe(game.status_label||'PROJETO');
   return `<article class="catalog-card ${game.featured||index===0?'catalog-card-featured':''}">
    <a class="catalog-art ${artClass}" href="jogo.html?slug=${encodeURIComponent(game.slug)}" aria-label="Conhecer ${safe(game.title)}">
