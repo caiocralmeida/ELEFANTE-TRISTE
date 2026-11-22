@@ -40,3 +40,45 @@
 .brand-mark img{display:block;width:100%;height:100%;object-fit:contain;padding:4px;transform:rotate(6deg);}
 
 .brand-mark img{object-fit:contain;width:100%;height:100%;padding:2px;transform:none;}
+
+
+/* IDENTIDADE VISUAL — painel administrativo em marfim e carvão */
+:root{--bg:#f3f1ec;--panel:#e9e6df;--panel2:#dfdbd3;--panel3:#d5d0c7;--line:#cbc6bc;--text:#191919;--muted:#77736d;--accent:#222222;--accent-dim:#22222212;--red:#a7433d}
+body{background:var(--bg);color:var(--text)}
+.sidebar{background:#e9e6df;border-color:#cbc6bc}
+.brand-mark{border-color:#222;color:#222}
+.brand-name small,.side-label{color:#77736d}
+.nav-btn{color:#625e58}
+.nav-btn .nav-icon{color:#77736d}
+.nav-btn:hover,.nav-btn.active{background:#2222220d;color:#171717}
+.nav-btn.active .nav-icon{color:#171717}
+.site-link,.logout-btn{border-color:#cbc6bc;color:#55514b}
+.logout-btn{color:#a7433d}
+.admin-main{background:#f3f1ec}
+.user-chip,.status-pill{border-color:#cbc6bc;color:#625e58}
+.btn-primary{background:#222;color:#f3f1ec}
+.btn-primary:hover{background:#45413c}
+.btn-quiet,.section-card,.stat-card,.editor-card,.project-card,.media-item,.login-card{background:#e9e6df;border-color:#cbc6bc;color:#191919}
+.stat-card span,.section-title p,.project-content p,.muted,.login-card p{color:#77736d}
+.field,select.field,textarea.field{background:#f7f5f0;border-color:#cbc6bc;color:#191919}
+.field::placeholder{color:#928d84}
+.field:focus{border-color:#55514b;box-shadow:0 0 0 3px #22222212}
+.form-group label,.image-controls label,.range-row,.login-card label{color:#625e58}
+.image-area{background:#e2ded6;border-color:#cbc6bc}
+.image-preview{background:repeating-conic-gradient(#e2ded6 0% 25%,#d7d2c9 0% 50%) 50%/18px 18px;border-color:#c4beb4}
+.image-preview .preview-empty{color:#77736d}
+.upload-panel{background:#f3f1ec;border-color:#aaa49a}
+.upload-panel.dragover{background:#2222220d;border-color:#222}
+.frame-shortcuts button,.media-apply button{background:#f3f1ec;border-color:#cbc6bc;color:#55514b}
+.frame-shortcuts button:hover,.media-apply button:hover{border-color:#222;color:#222;background:#2222220d}
+.zoom-control{background:#f3f1ec;border-color:#cbc6bc}
+.savebar{background:#e9e6dff2;border-color:#cbc6bc}
+.settings-note{background:#22222208;border-color:#aaa49a;color:#55514b}
+.project-thumb{background:#d5d0c7}
+.media-item img{background:#f3f1ec}
+.empty-state{border-color:#cbc6bc;color:#77736d}
+.small-btn{border-color:#cbc6bc;background:#f3f1ec;color:#333}
+.small-btn:hover{border-color:#222;color:#222}
+.status-pill.live{color:#222;background:#22222210}
+.status-pill.draft{color:#7c5b30;background:#7c5b3017}
+@media(max-width:760px){.sidebar{background:#e9e6df;border-bottom-color:#cbc6bc}.side-nav{background:transparent}}
