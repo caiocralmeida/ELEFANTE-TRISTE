@@ -37,3 +37,66 @@
 .about-symbol .elephant-emblem{width:min(320px,82%);height:auto;max-height:90%;}
 .game-cover .game-elephant{width:min(260px,65%);height:auto;max-height:85%;}
 .brand-mark img{padding:2px;}
+
+
+/* IDENTIDADE VISUAL — ELEFANTE TRISTE: marfim, carvão e cinzas quentes */
+:root{
+ --bg:#f3f1ec;--panel:#e9e6df;--panel2:#dedad2;--text:#191919;
+ --muted:#77736d;--line:#cbc6bc;--accent:#222222;--accent2:#55514b;
+}
+body{background:var(--bg);color:var(--text)}
+.site-header{background:#f3f1ecef;border-bottom-color:#19191918}
+.brand small,.main-nav a,.footer-top nav a{color:#77736d}
+.main-nav a:hover,.main-nav a.active,.header-cta span{color:#171717}
+.brand-mark{border-color:#222;color:#222}
+.header-cta{border-color:#c9c4ba;color:#222}
+.menu-toggle{color:#191919}
+.eyebrow,.pulse{color:#4d4943}
+.pulse{background:#222;box-shadow:0 0 12px #2225}
+h1 em,h2 em,.section-heading h2 span,.support h2 span{color:#77716a}
+.lead,.text-link,.feature-info p:not(.eyebrow),.section-aside,.coming-card p,
+.page-intro>p:last-child,.game-description{color:#625e58}
+.btn-primary{background:#202020;color:#f5f2ec}
+.btn-primary:hover{background:#45413c}
+.btn-outline{border-color:#8e8980;color:#222}
+.btn-outline:hover{border-color:#222;color:#222;background:#e4e0d8}
+.btn-outline span{color:inherit}
+.btn-primary span{color:inherit}
+.btn-outline:hover{background:#e4e0d8}
+.text-link{border-color:#aaa49a}
+.text-link:hover{color:#111;border-color:#111}
+.hero-art{background:radial-gradient(ellipse at center,#e4e0d8 0,#d8d3ca 45%,#c9c3b9 100%)}
+.art-orbit{border-color:#25252535}
+.elephant-symbol{color:#171717;text-shadow:0 0 45px #0002}
+.art-note,.art-index{color:#514d47}
+.feature-card,.catalog-card,.coming-card,.about-panel,.contact-card{background:#e9e6df;border-color:#d2cdc3}
+.feature-image{background-color:#d5d0c7}
+.art-gridlife{background:radial-gradient(ellipse at 70% 45%,#bcb8ad 0,#aaa69c 35%,#8e8a82 100%)}
+.art-shift{background:radial-gradient(ellipse at 50% 40%,#c4bcb5,#a9a19a 55%,#827b75 100%)}
+.feature-monogram,.catalog-art b{color:#f4f1eb;text-shadow:0 5px 25px #0006}
+.image-label,.catalog-art>span{color:#fff}
+.round-arrow{border-color:#aaa49a;color:#222}
+.coming-card>span{color:#55514b}
+.coming-art{color:#3a3834;background:linear-gradient(135deg,#d5d0c7,#bdb7ad)}
+.coming-art.alt{background:linear-gradient(135deg,#d6cec8,#b9aea8)}
+.coming-art.third{background:linear-gradient(135deg,#d0d0cb,#b6b7b1)}
+.manifesto{background:#242321;color:#f3f1ec}
+.manifesto .eyebrow{color:#c7c1b7}
+.manifesto h2 em{color:#c9c2b7}
+.manifesto-bottom p{color:#ddd8cf}
+.manifesto .btn-outline{color:#f3f1ec;border-color:#aaa49a}
+.manifesto .btn-outline:hover{background:#f3f1ec;color:#222}
+.site-footer{background:#e7e4dd;border-top-color:#d0cbc1}
+.footer-bottom{border-top-color:#d0cbc1;color:#77736d}
+.footer-bottom a:hover{color:#222}
+.search-box{border-color:#aaa49a}
+.search-box span{color:#222}
+.search-box input{color:#191919}
+.filter{border-color:#c9c4ba;color:#625e58}
+.filter.active,.filter:hover{border-color:#222;color:#222;background:#e6e2da}
+.game-cover{background-color:#d5d0c7}
+.game-cover>span,.status-pill{color:#333;border-color:#aaa49a}
+.about-symbol{background:radial-gradient(circle,#d8d3ca,#e9e6df 68%);color:#191919}
+.contact-grid{background:none}
+.pix-placeholder{border-color:#aaa49a;color:#333}
+@media(max-width:800px){.main-nav{background:#e9e6df;border-bottom-color:#cbc6bc}}
