@@ -86,3 +86,42 @@ body{background:var(--bg);color:var(--text)}
 
 /* Logo oficial sem bloco preto no painel claro */
 .brand-mark img{mix-blend-mode:screen;}
+
+
+
+/* REDESIGN 2026 — painel alinhado à identidade pública */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{--bg:#f3f0e9;--panel:#fffdf8;--panel2:#eee9e0;--panel3:#e5dfd5;--line:#d8d2c7;--text:#242321;--muted:#777168;--accent:#a66f52;--accent-dim:#a66f5218;--red:#a7433d}
+body{font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.sidebar{background:#e9e4da;border-color:#d8d2c7}
+.brand-mark{border:0;background:transparent;transform:none}
+.brand-mark img{mix-blend-mode:multiply!important}
+.brand-name{font-family:'Space Grotesk';color:#242321}
+.brand-name small,.side-label{color:#81796e}
+.nav-btn{color:#625d55}
+.nav-btn .nav-icon{color:#8b8175}
+.nav-btn:hover,.nav-btn.active{background:#a66f5218;color:#8d5c43}
+.nav-btn.active .nav-icon{color:#8d5c43}
+.admin-main{background:var(--bg)}
+.topbar h1,.page-heading h1{font-family:'Space Grotesk';letter-spacing:-.055em}
+.eyebrow{color:#a66f52}
+.btn-primary{background:#242321;color:#fffdf8}
+.btn-primary:hover{background:#a66f52}
+.btn-quiet,.section-card,.stat-card,.editor-card,.project-card,.media-item,.login-card{background:#fffdf8;border-color:#d8d2c7;color:#242321}
+.field,select.field,textarea.field{background:#f8f6f1;border-color:#d8d2c7;color:#242321}
+.field:focus{border-color:#a66f52;box-shadow:0 0 0 3px #a66f5218}
+.form-group label,.image-controls label,.range-row,.login-card label{color:#625d55}
+.image-area{background:#f0ece4;border-color:#d8d2c7}
+.image-preview{border-color:#c9c1b5}
+.upload-panel{background:#f8f6f1;border-color:#c9b9aa}
+.upload-panel.dragover{border-color:#a66f52;background:#a66f5218}
+.image-controls input[type=range],.zoom-control input[type=range]{accent-color:#a66f52}
+.frame-shortcuts button,.media-apply button,.small-btn{background:#f8f6f1;border-color:#d8d2c7;color:#625d55}
+.frame-shortcuts button:hover,.media-apply button:hover,.small-btn:hover{border-color:#a66f52;color:#8d5c43;background:#a66f520d}
+.savebar{background:#fffdf8f2;border-color:#d8d2c7}
+.settings-note{background:#a66f520d;border-color:#d2b7a5;color:#625d55}
+.project-thumb{background:#e6e0d6}
+.media-item img{background:#f3f0e9}
+.status-pill.live{color:#8d5c43;background:#a66f5218}
+.status-pill.draft{color:#856238;background:#85623817}
+.logout-btn{color:#a7433d}
