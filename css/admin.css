@@ -82,3 +82,7 @@ body{background:var(--bg);color:var(--text)}
 .status-pill.live{color:#222;background:#22222210}
 .status-pill.draft{color:#7c5b30;background:#7c5b3017}
 @media(max-width:760px){.sidebar{background:#e9e6df;border-bottom-color:#cbc6bc}.side-nav{background:transparent}}
+
+
+/* Logo oficial sem bloco preto no painel claro */
+.brand-mark img{mix-blend-mode:screen;}
