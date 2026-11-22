@@ -589,3 +589,8 @@ h1 em,h2 em{color:var(--accent)}
  .game-gallery-heading h2{font-size:39px}
  .game-footer-top{flex-direction:column;gap:12px}
 }
+
+
+/* Corrige títulos sobre as artes: imagem própria já contém a identidade do jogo. */
+.catalog-redesign .catalog-art:has(.public-frame-image) strong{display:none}
+.catalog-redesign .catalog-art:not(:has(.public-frame-image)) strong{max-width:85%;overflow-wrap:anywhere;text-transform:uppercase}
