@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Elefante">
+  <g fill="none" stroke="#d6f36a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M31 48C24 34 13 35 11 48c-2 14 5 28 17 32"/>
+    <path d="M97 48c7-14 18-13 20 0 2 14-5 28-17 32"/>
+    <path d="M29 43c7-13 18-19 35-19s28 6 35 19v34c0 17-13 29-29 29H56c-16 0-29-12-29-29V43Z"/>
+    <path d="M83 77c0 13-7 22-18 22-8 0-13-5-13-12 0-6 4-10 10-10h8"/>
+    <path d="M44 57h1M82 57h1" stroke-width="9"/>
+    <path d="M47 91c5 4 10 6 17 6"/>
+  </g>
+</svg>
